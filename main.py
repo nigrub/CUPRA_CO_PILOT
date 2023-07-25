@@ -141,7 +141,7 @@ if st.button("Send"):
     st.session_state['last_user_input'] = st.session_state.user_input
     reply, st.session_state.messages = chat_with_gpt3(st.session_state.chat_id, st.session_state.messages, st.session_state.user_input)
     st.markdown(f'<div style="padding:10px;margin:5px;border-radius:5px;background-color:#F8F8F8;color:black;">CUPRA Co-Pilot: {reply}</div>', unsafe_allow_html=True)
-    user_input = user_input_placeholder.text_input("Type your message here...", value='', key='user_input')  # Set the input field to empty string
+    user_input_placeholder.text_input("Type your message here...", value='', key='user_input')  # Set the input field to empty string
 
 if st.button("Regenerate Response"):
     reply, st.session_state.messages = chat_with_gpt3(st.session_state.chat_id, st.session_state.messages, st.session_state['last_user_input'])
