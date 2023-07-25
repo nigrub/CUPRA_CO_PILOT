@@ -11,7 +11,7 @@ openai.api_key = st.secrets["openai"]["api_key"]
 
 # Database setup
 def create_connection():
-    conn = None
+    conn = None;
     try:
         conn = sqlite3.connect('conversations.db')
         print(f'successful connection with sqlite version {sqlite3.version}')
@@ -146,7 +146,7 @@ if st.button("Send"):
 if st.button("Regenerate Response"):
     reply, st.session_state.messages = chat_with_gpt3(st.session_state.chat_id, st.session_state.messages, st.session_state['last_user_input'])
     st.markdown(f'<div style="padding:10px;margin:5px;border-radius:5px;background-color:#F8F8F8;color:black;">CUPRA Co-Pilot (Regenerated): {reply}</div>', unsafe_allow_html=True)
-components.v1.html('<
+
 
 
 
