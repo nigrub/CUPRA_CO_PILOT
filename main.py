@@ -1,6 +1,3 @@
-import os
-from dotenv import load_dotenv
-
 import streamlit as st
 import openai
 import sqlite3
@@ -8,14 +5,8 @@ import datetime
 from sqlite3 import Error
 from streamlit import components
 
-# Load the .env file
-load_dotenv()
-
 # Set your OpenAI API Key
 openai.api_key = st.secrets["openai"]["api_key"]
-
-...
-
 
 # Database setup
 def create_connection():
