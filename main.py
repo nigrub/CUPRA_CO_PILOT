@@ -4,13 +4,14 @@ import sqlite3
 import datetime
 from sqlite3 import Error
 from streamlit import components
+import uuid
 
 # Set your OpenAI API Key
 openai.api_key = st.secrets["openai"]["api_key"]
 
 # Database setup
 def create_connection():
-    conn = None;
+    conn = None
     try:
         conn = sqlite3.connect('conversations.db')
         print(f'successful connection with sqlite version {sqlite3.version}')
@@ -107,8 +108,6 @@ if 'chat_id' not in st.session_state:
     st.session_state['chat_id'] = ''
 if 'messages' not in st.session_state:
     st.session_state['messages'] = [{'role': 'system', 'content': 'You are chatting with the CUPRA Co-Pilot, how can I help today?'}]
-if 'user_input' not in st.session_state:
-    st.session_state['user_input'] = ''
 if 'last_user_input' not in st.session_state:
     st.session_state['last_user_input'] = ''
 
@@ -134,18 +133,20 @@ if 'chat_id' in st.session_state and 'messages' in st.session_state:
         else:
             st.markdown(f'<div style="padding:10px;margin:5px;border-radius:5px;background-color:#F8F8F8;color:black;">CUPRA Co-Pilot: {message["content"]}</div>', unsafe_allow_html=True)
 
-user_input_placeholder = st.empty()  # Declare an empty placeholder
-user_input = user_input_placeholder.text_input("Type your message here...", key='user_input')
+# Create a unique key for the user_input widget
+unique_key = str(uuid.uuid4())
+
+user_input = st.text_input("Type your message here...", key=unique_key)
 
 if st.button("Send"):
-    st.session_state['last_user_input'] = st.session_state.user_input
-    reply, st.session_state.messages = chat_with_gpt3(st.session_state.chat_id, st.session_state.messages, st.session_state.user_input)
+    st.session_state['last_user_input'] = user_input
+    reply, st.session_state.messages = chat_with_gpt3(st.session_state.chat_id, st.session_state.messages, user_input)
     st.markdown(f'<div style="padding:10px;margin:5px;border-radius:5px;background-color:#F8F8F8;color:black;">CUPRA Co-Pilot: {reply}</div>', unsafe_allow_html=True)
-    user_input_placeholder.text_input("Type your message here...", value='', key='user_input')  # Set the input field to empty string
 
 if st.button("Regenerate Response"):
     reply, st.session_state.messages = chat_with_gpt3(st.session_state.chat_id, st.session_state.messages, st.session_state['last_user_input'])
     st.markdown(f'<div style="padding:10px;margin:5px;border-radius:5px;background-color:#F8F8F8;color:black;">CUPRA Co-Pilot (Regenerated): {reply}</div>', unsafe_allow_html=True)
-components.v1.html('<hr/>', height=10)
+components.v1.html('<
+
 
 
