@@ -12,7 +12,7 @@ from streamlit import components
 load_dotenv()
 
 # Set your OpenAI API Key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = st.secrets["openai"]["api_key"]
 
 ...
 
