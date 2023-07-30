@@ -3,4 +3,5 @@ openai
 python-dotenv
 streamlit_chat
 Streamlit_Chat
+langchain
 
