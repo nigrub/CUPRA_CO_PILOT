@@ -40,7 +40,7 @@ with st.sidebar:
         chat_id = record['chat_id']  # get the chat_id from record
         if chat_id != "load":
             chat_name = chat_id.split('-')[0]  # only display the name part
-            if st.button(chat_name):
+            if st.button(chat_name, key=chat_id):
                 st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
 
 # Main chat
