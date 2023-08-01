@@ -10,7 +10,7 @@ import random
 
 st.title("Welcome To The CUPRA Co-Pilot")
 
-openai.api_key = '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'
+openai.api_key = st.secrets["openai"]["api_key"]
 
 st.session_state["openai_model"] = "gpt-4"
 
