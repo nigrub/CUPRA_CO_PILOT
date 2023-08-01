@@ -7,4 +7,3 @@ langchain
 gspread
 pandas
 uuid
-random
