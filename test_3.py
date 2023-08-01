@@ -10,6 +10,8 @@ import random
 
 st.title("Welcome To The CUPRA Co-Pilot")
 
+openai.api_key = st.secrets["openai"]["api_key"]
+
 st.session_state["openai_model"] = "gpt-4"
 
 if "messages" not in st.session_state:
@@ -34,12 +36,11 @@ with st.sidebar:
     # Display historical conversations
     st.header("Historical Conversations")
     all_records = sheet.get_all_records()
-    for record in all_records:
-        chat_id = record['chat_id']  # get the chat_id from record
-        if chat_id != "load":
-            chat_name = chat_id.split('-')[0]  # only display the name part
-            if st.button(chat_name):
-                st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
+    unique_chat_ids = list(set(record['chat_id'] for record in all_records if record['chat_id'] != "load"))  # get unique chat_ids
+    for chat_id in unique_chat_ids:
+        chat_name = chat_id.split('-')[0]  # only display the name part
+        if st.button(chat_name, key=f"chat_button_{chat_id}"):  # use chat_id in key to make it unique
+            st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
 
 # Main chat
 for message in st.session_state.messages:
