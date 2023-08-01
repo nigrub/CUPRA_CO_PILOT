@@ -4,5 +4,8 @@ python-dotenv
 streamlit_chat
 Streamlit_Chat
 langchain
-gsheetsdb==x.x.x
-
+gspread
+pandas
+os
+uuid
+random
