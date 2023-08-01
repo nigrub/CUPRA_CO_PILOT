@@ -6,6 +6,5 @@ Streamlit_Chat
 langchain
 gspread
 pandas
-os
 uuid
 random
