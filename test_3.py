@@ -30,19 +30,18 @@ with st.sidebar:
     st.header("Chat Options")
     chat_name = st.text_input("Chat Name")
     if st.button("New Conversation"):
-        # Empty the messages and create new chat id
+        # Empty the messages
         st.session_state.messages = []
-        st.session_state.chat_id = f"{chat_name}-{random.randint(10000000, 99999999)}"
 
     # Display historical conversations
     st.header("Historical Conversations")
     all_records = sheet.get_all_records()
-    chat_ids = list(set([rec['chat_id'] for rec in all_records]))  # unique chat_ids
-    for chat_id in chat_ids:
-        chat_name = str(chat_id).split('-')[0]  # only display the name part
-        if st.button(chat_name):
-            st.session_state.chat_id = chat_id
-            st.session_state.messages = [rec for rec in all_records if rec['chat_id'] == chat_id]
+    for record in all_records:
+        chat_id = record['chat_id']  # get the chat_id from record
+        if chat_id != "load":
+            chat_name = chat_id.split('-')[0]  # only display the name part
+            if st.button(chat_name):
+                st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
 
 # Main chat
 for message in st.session_state.messages:
@@ -50,10 +49,17 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 if prompt := st.chat_input("What is up?"):
-    st.session_state.messages.append({"role": "user", "content": prompt, "chat_id": st.session_state.chat_id})
+    # Generate a unique chat_id for this conversation
+    if "chat_id" in st.session_state:
+        chat_id = st.session_state.chat_id
+    else:
+        chat_id = f"{chat_name}-{random.randint(10000000, 99999999)}"
+        st.session_state.chat_id = chat_id
+
+    st.session_state.messages.append({"role": "user", "content": prompt, "chat_id": chat_id})
     with st.chat_message("user"):
         st.markdown(prompt)
-        sheet.append_row([str(uuid.uuid4()), st.session_state.chat_id, str(datetime.now(timezone.utc)), "user", prompt])  # Add user prompt to Google Sheet
+        sheet.append_row([str(uuid.uuid4()), str(chat_id), str(datetime.now(timezone.utc)), "user", prompt])  # Add user prompt to Google Sheet
 
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
@@ -62,12 +68,12 @@ if prompt := st.chat_input("What is up?"):
             model=st.session_state["openai_model"],
             messages=[
                 {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages if m["chat_id"] == st.session_state.chat_id
+                for m in st.session_state.messages
             ],
             stream=True,
         ):
-            if "choices" in response and len(response.choices) > 0:
-                full_response += response.choices[0].delta.get("content", "")
-            message_placeholder.markdown(full_response)
-    st.session_state.messages.append({"role": "assistant", "content": full_response, "chat_id": st.session_state.chat_id})
-    sheet.append_row([str(uuid.uuid4()), st.session_state.chat_id, str(datetime.now(timezone.utc)), "assistant", full_response])  # Add assistant response to Google Sheet
+            full_response += response.choices[0].delta.get("content", "")
+            message_placeholder.markdown(full_response + "▌")
+        message_placeholder.markdown(full_response)
+    st.session_state.messages.append({"role": "assistant", "content": full_response, "chat_id": chat_id})
+    sheet.append_row([str(uuid.uuid4()), str(chat_id), str(datetime.now(timezone.utc)), "assistant", full_response])  # Add assistant response to Google Sheet
