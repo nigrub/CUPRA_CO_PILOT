@@ -4,4 +4,5 @@ python-dotenv
 streamlit_chat
 Streamlit_Chat
 langchain
+gsheetsdb==x.x.x
 
