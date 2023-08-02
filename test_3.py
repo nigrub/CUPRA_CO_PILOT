@@ -47,6 +47,8 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+# ...
+
 if prompt := st.chat_input("What is up?"):
     # Generate a unique chat_id for this conversation
     if "chat_id" in st.session_state:
@@ -60,19 +62,28 @@ if prompt := st.chat_input("What is up?"):
         st.markdown(prompt)
         sheet.append_row([str(uuid.uuid4()), str(chat_id), str(datetime.now(timezone.utc)), "user", prompt])  # Add user prompt to Google Sheet
 
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-        for response in openai.ChatCompletion.create(
-            model=st.session_state["openai_model"],
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        ):
-            full_response += response.choices[0].delta.get("content", "")
-            message_placeholder.markdown(full_response + "▌")
-        message_placeholder.markdown(full_response)
+    # predefined responses
+    predefined_answers = {
+        "What is Amy's favourite colour?": "Red"
+        # You can add more predefined answers here...
+    }
+
+    if prompt in predefined_answers:
+        full_response = predefined_answers[prompt]
+    else:
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
+            for response in openai.ChatCompletion.create(
+                model=st.session_state["openai_model"],
+                messages=[
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages
+                ],
+                stream=True,
+            ):
+                full_response += response.choices[0].delta.get("content", "")
+                message_placeholder.markdown(full_response + "▌")
+            message_placeholder.markdown(full_response)
     st.session_state.messages.append({"role": "assistant", "content": full_response, "chat_id": chat_id})
     sheet.append_row([str(uuid.uuid4()), str(chat_id), str(datetime.now(timezone.utc)), "assistant", full_response])  # Add assistant response to Google Sheet
