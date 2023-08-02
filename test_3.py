@@ -70,6 +70,8 @@ if prompt := st.chat_input("What is up?"):
 
     if prompt in predefined_answers:
         full_response = predefined_answers[prompt]
+        with st.chat_message("assistant"):
+            st.markdown(full_response)
     else:
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
