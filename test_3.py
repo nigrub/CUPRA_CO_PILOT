@@ -38,15 +38,22 @@ with st.sidebar:
         # Generate a new chat_id
         if chat_name:
             st.session_state.chat_id = generate_chat_id(chat_name)
+            # Add the new chat_id to the historical conversations list
+            unique_chat_ids = set(record['chat_id'] for record in sheet.get_all_records() if record['chat_id'] != "load")
+            unique_chat_ids.add(st.session_state.chat_id)
+            st.session_state.historical_conversations = list(unique_chat_ids)
 
     # Display historical conversations
     st.header("Historical Conversations")
     all_records = sheet.get_all_records()
     unique_chat_ids = list(set(record['chat_id'] for record in all_records if record['chat_id'] != "load"))  # get unique chat_ids
-    for chat_id in unique_chat_ids:
+    st.session_state.historical_conversations = st.session_state.historical_conversations if "historical_conversations" in st.session_state else unique_chat_ids
+    for chat_id in st.session_state.historical_conversations:
         chat_name = str(chat_id).split('-')[0]  # only display the name part
-        if st.button(chat_name, key=f"chat_button_{chat_id}"):  # use chat_id in key to make it unique
+        # Add CSS to highlight the selected conversation button
+        if st.button(chat_name, key=f"chat_button_{chat_id}", style='background-color: lightblue' if st.session_state.chat_id == chat_id else None):
             st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
+            st.session_state.chat_id = chat_id
 
 # Main chat
 if "chat_id" not in st.session_state:
