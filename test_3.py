@@ -45,58 +45,34 @@ with st.sidebar:
         # Generate a new chat_id
         if chat_name:
             st.session_state.chat_id = generate_chat_id(chat_name)
-            # Add the new chat_id to the historical conversations list
-            unique_chat_ids = set(record['chat_id'] for record in sheet.get_all_records() if record['chat_id'] != "load")
-            unique_chat_ids.add(st.session_state.chat_id)
-            st.session_state.historical_conversations = list(unique_chat_ids)
 
     # Display historical conversations
     st.header("Historical Conversations")
     all_records = sheet.get_all_records()
     unique_chat_ids = list(set(record['chat_id'] for record in all_records if record['chat_id'] != "load"))  # get unique chat_ids
-    st.session_state.historical_conversations = st.session_state.historical_conversations if "historical_conversations" in st.session_state else unique_chat_ids
-
-    # Sort chat_ids based on the most recent message timestamp
-    sorted_chat_ids = sorted(
-        st.session_state.historical_conversations,
-        key=lambda chat_id: max((r["timestamp"] for r in all_records if r["chat_id"] == chat_id), default='0001-01-01T00:00:00Z'),
+    unique_chat_names = list(set(chat_id.split("-")[0] for chat_id in unique_chat_ids))  # Get the list of unique chat names from chat_ids
+    chats_with_messages = [chat_name for chat_name in unique_chat_names if any(record['chat_id'].startswith(chat_name) for record in all_records)]  # Filter out the chats with no messages
+    sorted_chat_names = sorted(
+        chats_with_messages,
+        key=lambda chat_name: max((r["timestamp"] for r in all_records if r["chat_id"].startswith(chat_name)), default='0001-01-01T00:00:00Z'),
         reverse=True
-    )
+    )  # Sort chats based on the most recent message timestamp
 
-    # Check if there are any historical conversations available, if not show a dummy option
-    if not sorted_chat_ids:
-        formatted_chat_ids = ["No Conversations Available"]
-    else:
-        formatted_chat_ids = []
-        for i, chat_id in enumerate(sorted_chat_ids):
-            formatted_chat_ids.append(chat_id)
-            if i != len(sorted_chat_ids) - 1:
-                formatted_chat_ids.append('---')
+    formatted_chat_names = sorted_chat_names if sorted_chat_names else ["No Conversations Available"]
+    selected_chat_name = st.radio("Choose a conversation", options=formatted_chat_names, key="selected_chat_name")
 
-    selected_chat_id = st.radio("Choose a conversation", options=formatted_chat_ids, key="selected_chat_id")
-    selected_chat_id = selected_chat_id if selected_chat_id != '---' else None
-    if selected_chat_id and selected_chat_id != "No Conversations Available":
-        selected_chat_id_full = [chat_id for chat_id in st.session_state.historical_conversations if chat_id.startswith(selected_chat_id)][0]
+    if selected_chat_name and selected_chat_name != "No Conversations Available":
+        selected_chat_id_full = max((record['chat_id'] for record in all_records if record["chat_id"].startswith(selected_chat_name)), default=None)
         st.session_state.messages = [r for r in all_records if r["chat_id"] == selected_chat_id_full]
         st.session_state.chat_id = selected_chat_id_full
 
 # Main chat
-if "chat_id" not in st.session_state:
-    st.session_state.chat_id = None
-
-if st.session_state.chat_id is None:
-    if chat_name:
-        st.session_state.chat_id = generate_chat_id(chat_name)
-
 if st.session_state.chat_id:
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # ...
-
     if prompt := st.chat_input("What is up?"):
-        # Generate a unique chat_id for this conversation
         chat_id = st.session_state.chat_id
 
         st.session_state.messages.append({"role": "user", "content": prompt, "chat_id": chat_id})
