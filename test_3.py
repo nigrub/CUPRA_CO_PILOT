@@ -8,12 +8,28 @@ from datetime import datetime, timezone
 import uuid
 import random
 import time
+from tiktoken import Tokenizer
+from tiktoken.models import GPT4
 
 st.title("Welcome To The CUPRA Co-Pilot")
 
 openai.api_key = st.secrets["openai"]["api_key"]
 
 st.session_state["openai_model"] = "gpt-4"
+
+# Function to count tokens in a string
+def count_tokens(text):
+    tokenizer = Tokenizer()
+    token_count = len(list(tokenizer.tokenize(text)))
+    return token_count
+
+# Function to truncate a string to a maximum number of tokens
+def truncate_string(s, max_tokens):
+    tokenizer = Tokenizer()
+    tokens = list(tokenizer.tokenize(s))
+    if len(tokens) > max_tokens:
+        s = ''.join(tokens[-max_tokens:])
+    return s
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -74,6 +90,12 @@ if st.session_state.chat_id:
     if prompt := st.chat_input("What is up?"):
         chat_id = st.session_state.chat_id
 
+        # Count tokens in the new message
+        new_message_token_count = count_tokens(prompt)
+
+        # Reserve some tokens for the new message and API response
+        max_tokens_for_history = 4096 - new_message_token_count - 1000  # Reserve 1000 tokens for the API response
+
         st.session_state.messages.append({"role": "user", "content": prompt, "chat_id": chat_id})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -93,13 +115,17 @@ if st.session_state.chat_id:
                 message_placeholder.markdown(full_response)
             else:
                 full_response = ""
-                for response in openai.ChatCompletion.create(
-                    model=st.session_state["openai_model"],
-                    messages=[
+                message_history = [
                         {"role": m["role"], "content": m["content"]}
                         for m in st.session_state.messages
                         if m["role"] != "load"
-                    ],
+                ]
+                # Truncate the message history to the allowed number of tokens
+                truncated_history = truncate_string(str(message_history), max_tokens_for_history)
+
+                for response in openai.ChatCompletion.create(
+                    model=st.session_state["openai_model"],
+                    messages=truncated_history,
                     stream=True,
                 ):
                     full_response += response.choices[0].delta.get("content", "")
