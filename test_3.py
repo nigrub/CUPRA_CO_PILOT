@@ -56,6 +56,14 @@ with st.sidebar:
         reverse=True
     )
 
+    # Display the currently engaged chat name at the top in the sidebar
+    if st.session_state.chat_id:
+        current_chat_name = str(st.session_state.chat_id).split('-')[0]
+        st.markdown(
+            f'<div style="position: sticky; top: 10px; font-weight: bold; color: black; background-color: #f8f8f8; padding: 10px;">Engaged Chat: {current_chat_name}</div>',
+            unsafe_allow_html=True
+        )
+
     for chat_id in sorted_chat_ids:
         chat_name = str(chat_id).split('-')[0]  # only display the name part
         if st.button(chat_name, key=f"chat_button_{chat_id}", help=chat_id):
@@ -69,14 +77,6 @@ if "chat_id" not in st.session_state:
 if st.session_state.chat_id is None:
     if chat_name:
         st.session_state.chat_id = generate_chat_id(chat_name)
-
-# Display the currently engaged chat name at the top in the sidebar
-if st.session_state.chat_id:
-    current_chat_name = str(st.session_state.chat_id).split('-')[0]
-    st.sidebar.markdown(
-        f'<div style="position: sticky; top: 0; background-color: #f8f8f8; padding: 10px;">Engaged Chat: {current_chat_name}</div>',
-        unsafe_allow_html=True
-    )
 
 if st.session_state.chat_id:
     for message in st.session_state.messages:
