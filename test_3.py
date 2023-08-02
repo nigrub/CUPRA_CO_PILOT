@@ -28,7 +28,7 @@ sheet = gc.open('CUPRADB').sheet1
 
 # Sidebar for input chat name and new conversation button
 with st.sidebar:
-    st.header("Chat Options")
+    st.header("Chat History")
     chat_name = st.text_input("Chat Name")
     if st.button("New Conversation"):
         # Empty the messages
