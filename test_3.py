@@ -21,9 +21,6 @@ if "chat_id" not in st.session_state:
     st.session_state.chat_id = None
 if "openai_model" not in st.session_state:
     st.session_state.openai_model = "gpt-4"
-if "historical_conversations" not in st.session_state:
-    st.session_state.historical_conversations = []
-
 
 # Function to generate a new chat_id
 def generate_chat_id(chat_name):
@@ -40,20 +37,21 @@ with st.sidebar:
     st.header("Chat History")
     chat_name = st.text_input("Chat Name")
     if st.button("New Conversation"):
-        # Empty the messages
-        st.session_state.messages = []
-        # Generate a new chat_id
         if chat_name:
+            # Generate a new chat_id
             st.session_state.chat_id = generate_chat_id(chat_name)
+            # Empty the messages
+            st.session_state.messages = []
+            # Add the new chat_id to the Google Sheet as a load record
+            sheet.append_row([str(uuid.uuid4()), str(st.session_state.chat_id), str(datetime.now(timezone.utc)), "load", "load"])
 
     # Display historical conversations
     st.header("Historical Conversations")
     all_records = sheet.get_all_records()
     unique_chat_ids = list(set(record['chat_id'] for record in all_records if record['chat_id'] != "load"))  # get unique chat_ids
     unique_chat_names = list(set(chat_id.split("-")[0] for chat_id in unique_chat_ids))  # Get the list of unique chat names from chat_ids
-    chats_with_messages = [chat_name for chat_name in unique_chat_names if any(record['chat_id'].startswith(chat_name) for record in all_records)]  # Filter out the chats with no messages
     sorted_chat_names = sorted(
-        chats_with_messages,
+        unique_chat_names,
         key=lambda chat_name: max((r["timestamp"] for r in all_records if r["chat_id"].startswith(chat_name)), default='0001-01-01T00:00:00Z'),
         reverse=True
     )  # Sort chats based on the most recent message timestamp
@@ -69,8 +67,9 @@ with st.sidebar:
 # Main chat
 if st.session_state.chat_id:
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        if message["role"] != "load":
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
     if prompt := st.chat_input("What is up?"):
         chat_id = st.session_state.chat_id
@@ -99,6 +98,7 @@ if st.session_state.chat_id:
                     messages=[
                         {"role": m["role"], "content": m["content"]}
                         for m in st.session_state.messages
+                        if m["role"] != "load"
                     ],
                     stream=True,
                 ):
