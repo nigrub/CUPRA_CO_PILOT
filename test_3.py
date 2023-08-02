@@ -66,7 +66,13 @@ with st.sidebar:
 
     for chat_id in sorted_chat_ids:
         chat_name = str(chat_id).split('-')[0]  # only display the name part
+        if f"chat_button_{chat_id}" not in st.session_state:
+            st.session_state[f"chat_button_{chat_id}"] = False
+
         if st.button(chat_name, key=f"chat_button_{chat_id}", help=chat_id):
+            st.session_state[f"chat_button_{chat_id}"] = True
+
+        if st.session_state[f"chat_button_{chat_id}"]:
             st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
             st.session_state.chat_id = chat_id
 
