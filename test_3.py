@@ -70,10 +70,10 @@ if st.session_state.chat_id is None:
     if chat_name:
         st.session_state.chat_id = generate_chat_id(chat_name)
 
-# Display the currently engaged chat name at the top
+# Display the currently engaged chat name at the top in the sidebar
 if st.session_state.chat_id:
     current_chat_name = str(st.session_state.chat_id).split('-')[0]
-    st.header(f"Engaged Chat: {current_chat_name}")
+    st.sidebar.header(f"Engaged Chat: {current_chat_name}")
 
 if st.session_state.chat_id:
     for message in st.session_state.messages:
