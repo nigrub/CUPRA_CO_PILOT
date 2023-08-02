@@ -50,7 +50,7 @@ with st.sidebar:
     st.session_state.historical_conversations = st.session_state.historical_conversations if "historical_conversations" in st.session_state else unique_chat_ids
     for chat_id in st.session_state.historical_conversations:
         chat_name = str(chat_id).split('-')[0]  # only display the name part
-        if st.markdown(f'<div style="{"background-color: lightblue" if st.session_state.chat_id == chat_id else ""}"><a href="#" onclick="var container=document.getElementById(\'{chat_id}\'); container.style.backgroundColor=\'lightblue\'; st.session_state.chat_id=\'{chat_id}\';"><button>{chat_name}</button></a></div>', unsafe_allow_html=True):
+        if st.button(chat_name, key=f"chat_button_{chat_id}", help=chat_id):
             st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
             st.session_state.chat_id = chat_id
 
