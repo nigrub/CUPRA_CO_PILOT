@@ -7,6 +7,7 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime, timezone
 import uuid
 import random
+import time
 
 st.title("Welcome To The CUPRA Co-Pilot")
 
@@ -47,6 +48,8 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+import time  # add this to your imports
+
 # ...
 
 if prompt := st.chat_input("What is up?"):
@@ -68,13 +71,13 @@ if prompt := st.chat_input("What is up?"):
         # You can add more predefined answers here...
     }
 
-    if prompt in predefined_answers:
-        full_response = predefined_answers[prompt]
-        with st.chat_message("assistant"):
-            st.markdown(full_response)
-    else:
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        if prompt in predefined_answers:
+            full_response = predefined_answers[prompt]
+            time.sleep(3)  # pause for 3 seconds
+            message_placeholder.markdown(full_response)
+        else:
             full_response = ""
             for response in openai.ChatCompletion.create(
                 model=st.session_state["openai_model"],
