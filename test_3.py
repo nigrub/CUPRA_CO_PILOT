@@ -56,10 +56,14 @@ with st.sidebar:
         reverse=True
     )  # Sort chats based on the most recent message timestamp
 
-    formatted_chat_names = sorted_chat_names if sorted_chat_names else ["No Conversations Available"]
+    # Add blank lines between each chat name
+    formatted_chat_names = [chat for sublist in [[chat_name, " "] for chat_name in sorted_chat_names] for chat in sublist]
+    formatted_chat_names = formatted_chat_names if formatted_chat_names else ["No Conversations Available"]
+
     selected_chat_name = st.radio("Choose a conversation", options=formatted_chat_names, key="selected_chat_name")
 
-    if selected_chat_name and selected_chat_name != "No Conversations Available":
+    # If a chat name is selected, load its messages
+    if selected_chat_name and selected_chat_name not in [" ", "No Conversations Available"]:
         selected_chat_id_full = max((record['chat_id'] for record in all_records if record["chat_id"].startswith(selected_chat_name)), default=None)
         st.session_state.messages = [r for r in all_records if r["chat_id"] == selected_chat_id_full]
         st.session_state.chat_id = selected_chat_id_full
