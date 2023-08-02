@@ -14,6 +14,22 @@ st.title("Welcome To The CUPRA Co-Pilot")
 openai.api_key = st.secrets["openai"]["api_key"]
 
 st.session_state["openai_model"] = "gpt-4"
+import openai
+import streamlit as st
+import os
+import gspread
+import pandas as pd
+from google.oauth2.service_account import Credentials
+from datetime import datetime, timezone
+import uuid
+import random
+import time
+
+st.title("Welcome To The CUPRA Co-Pilot")
+
+openai.api_key = st.secrets["openai"]["api_key"]
+
+st.session_state["openai_model"] = "gpt-4"
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -71,17 +87,10 @@ with st.sidebar:
             unsafe_allow_html=True
         )
 
-    for chat_id in sorted_chat_ids:
-        chat_name = str(chat_id).split('-')[0]  # only display the name part
-        if f"chat_button_{chat_id}" not in st.session_state:
-            st.session_state[f"chat_button_{chat_id}"] = False
-
-        if st.button(chat_name, key=f"chat_button_{chat_id}", help=chat_id):
-            st.session_state[f"chat_button_{chat_id}"] = True
-
-        if st.session_state[f"chat_button_{chat_id}"]:
-            st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
-            st.session_state.chat_id = chat_id
+    selected_chat_id = st.radio("Choose a conversation", options=sorted_chat_ids, key="selected_chat_id")
+    if selected_chat_id:
+        st.session_state.messages = [r for r in all_records if r["chat_id"] == selected_chat_id]
+        st.session_state.chat_id = selected_chat_id
 
 # Main chat
 if "chat_id" not in st.session_state:
