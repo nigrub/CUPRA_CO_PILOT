@@ -22,6 +22,12 @@ if "messages" not in st.session_state:
 def generate_chat_id(chat_name):
     return f"{chat_name}-{random.randint(10000000, 99999999)}"
 
+# Connect to Google Sheets
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+credentials = Credentials.from_service_account_file('credentials.json', scopes=scope)
+gc = gspread.authorize(credentials)
+sheet = gc.open('CUPRADB').sheet1
+
 # Sidebar for input chat name and new conversation button
 with st.sidebar:
     st.header("Chat History")
