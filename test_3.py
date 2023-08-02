@@ -18,13 +18,9 @@ st.session_state["openai_model"] = "gpt-4"
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Connect to Google Sheets
-scope = ['https://spreadsheets.google.com/feeds',
-         'https://www.googleapis.com/auth/drive']
-credentials = Credentials.from_service_account_file('credentials.json', scopes=scope)
-gc = gspread.authorize(credentials)
-
-sheet = gc.open('CUPRADB').sheet1
+# Function to generate a new chat_id
+def generate_chat_id(chat_name):
+    return f"{chat_name}-{random.randint(10000000, 99999999)}"
 
 # Sidebar for input chat name and new conversation button
 with st.sidebar:
@@ -33,6 +29,9 @@ with st.sidebar:
     if st.button("New Conversation"):
         # Empty the messages
         st.session_state.messages = []
+        # Generate a new chat_id
+        if chat_name:
+            st.session_state.chat_id = generate_chat_id(chat_name)
 
     # Display historical conversations
     st.header("Historical Conversations")
@@ -44,51 +43,53 @@ with st.sidebar:
             st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
 
 # Main chat
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+if "chat_id" not in st.session_state:
+    st.session_state.chat_id = None
 
-import time  # add this to your imports
+if st.session_state.chat_id is None:
+    if chat_name:
+        st.session_state.chat_id = generate_chat_id(chat_name)
 
-# ...
+if st.session_state.chat_id:
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-if prompt := st.chat_input("What is up?"):
-    # Generate a unique chat_id for this conversation
-    if "chat_id" in st.session_state:
+    # ...
+
+    if prompt := st.chat_input("What is up?"):
+        # Generate a unique chat_id for this conversation
         chat_id = st.session_state.chat_id
-    else:
-        chat_id = f"{chat_name}-{random.randint(10000000, 99999999)}"
-        st.session_state.chat_id = chat_id
 
-    st.session_state.messages.append({"role": "user", "content": prompt, "chat_id": chat_id})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-        sheet.append_row([str(uuid.uuid4()), str(chat_id), str(datetime.now(timezone.utc)), "user", prompt])  # Add user prompt to Google Sheet
+        st.session_state.messages.append({"role": "user", "content": prompt, "chat_id": chat_id})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+            sheet.append_row([str(uuid.uuid4()), str(chat_id), str(datetime.now(timezone.utc)), "user", prompt])  # Add user prompt to Google Sheet
 
-    # predefined responses
-    predefined_answers = {
-        "What is Amy's favourite colour?": "Red"
-        # You can add more predefined answers here...
-    }
+        # predefined responses
+        predefined_answers = {
+            "What is Amy's favourite colour?": "Red"
+            # You can add more predefined answers here...
+        }
 
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        if prompt in predefined_answers:
-            full_response = predefined_answers[prompt]
-            time.sleep(3)  # pause for 3 seconds
-            message_placeholder.markdown(full_response)
-        else:
-            full_response = ""
-            for response in openai.ChatCompletion.create(
-                model=st.session_state["openai_model"],
-                messages=[
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.messages
-                ],
-                stream=True,
-            ):
-                full_response += response.choices[0].delta.get("content", "")
-                message_placeholder.markdown(full_response + "▌")
-            message_placeholder.markdown(full_response)
-    st.session_state.messages.append({"role": "assistant", "content": full_response, "chat_id": chat_id})
-    sheet.append_row([str(uuid.uuid4()), str(chat_id), str(datetime.now(timezone.utc)), "assistant", full_response])  # Add assistant response to Google Sheet
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            if prompt in predefined_answers:
+                full_response = predefined_answers[prompt]
+                time.sleep(3)  # pause for 3 seconds
+                message_placeholder.markdown(full_response)
+            else:
+                full_response = ""
+                for response in openai.ChatCompletion.create(
+                    model=st.session_state["openai_model"],
+                    messages=[
+                        {"role": m["role"], "content": m["content"]}
+                        for m in st.session_state.messages
+                    ],
+                    stream=True,
+                ):
+                    full_response += response.choices[0].delta.get("content", "")
+                    message_placeholder.markdown(full_response + "▌")
+                message_placeholder.markdown(full_response)
+        st.session_state.messages.append({"role": "assistant", "content": full_response, "chat_id": chat_id})
+        sheet.append_row([str(uuid.uuid4()), str(chat_id), str(datetime.now(timezone.utc)), "assistant", full_response])  # Add assistant response to Google Sheet
