@@ -59,23 +59,23 @@ with st.sidebar:
     # Sort chat_ids based on the most recent message timestamp
     sorted_chat_ids = sorted(
         st.session_state.historical_conversations,
-        key=lambda chat_id: max(r["timestamp"] for r in all_records if r["chat_id"] == chat_id),
+        key=lambda chat_id: max((r["timestamp"] for r in all_records if r["chat_id"] == chat_id), default='0001-01-01T00:00:00Z'),
         reverse=True
     )
 
-    # Removing the '-random digits' and formatting the chat ids
-    sorted_chat_ids = [chat_id.split('-')[0] for chat_id in sorted_chat_ids]
-
-    # Formatting for radio buttons with spaces
-    formatted_chat_ids = []
-    for i, chat_id in enumerate(sorted_chat_ids):
-        formatted_chat_ids.append(chat_id)
-        if i != len(sorted_chat_ids) - 1:
-            formatted_chat_ids.append('---')
+    # Check if there are any historical conversations available, if not show a dummy option
+    if not sorted_chat_ids:
+        formatted_chat_ids = ["No Conversations Available"]
+    else:
+        formatted_chat_ids = []
+        for i, chat_id in enumerate(sorted_chat_ids):
+            formatted_chat_ids.append(chat_id)
+            if i != len(sorted_chat_ids) - 1:
+                formatted_chat_ids.append('---')
 
     selected_chat_id = st.radio("Choose a conversation", options=formatted_chat_ids, key="selected_chat_id")
     selected_chat_id = selected_chat_id if selected_chat_id != '---' else None
-    if selected_chat_id:
+    if selected_chat_id and selected_chat_id != "No Conversations Available":
         selected_chat_id_full = [chat_id for chat_id in st.session_state.historical_conversations if chat_id.startswith(selected_chat_id)][0]
         st.session_state.messages = [r for r in all_records if r["chat_id"] == selected_chat_id_full]
         st.session_state.chat_id = selected_chat_id_full
