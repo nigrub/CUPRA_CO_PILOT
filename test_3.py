@@ -43,11 +43,22 @@ with st.sidebar:
             unique_chat_ids.add(st.session_state.chat_id)
             st.session_state.historical_conversations = list(unique_chat_ids)
 
-    # Display historical conversations
-    st.header("Historical Conversations")
-    all_records = sheet.get_all_records()
-    unique_chat_ids = list(set(record['chat_id'] for record in all_records if record['chat_id'] != "load"))  # get unique chat_ids
-    st.session_state.historical_conversations = st.session_state.historical_conversations if "historical_conversations" in st.session_state else unique_chat_ids
+    # ... (previous code)
+
+    # Display the currently engaged chat name at the top in the sidebar
+    if st.session_state.chat_id:
+        current_chat_name = str(st.session_state.chat_id).split('-')[0]
+        st.sidebar.markdown(
+            f'<div style="position: sticky; top: 0; background-color: #f8f8f8; padding: 10px;">Engaged Chat: {current_chat_name}</div>',
+            unsafe_allow_html=True
+        )
+
+    if st.session_state.chat_id:
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+    # ... (rest of the code)
 
     # Sort chat_ids based on the most recent message timestamp
     sorted_chat_ids = sorted(
