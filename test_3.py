@@ -38,7 +38,7 @@ with st.sidebar:
     all_records = sheet.get_all_records()
     unique_chat_ids = list(set(record['chat_id'] for record in all_records if record['chat_id'] != "load"))  # get unique chat_ids
     for chat_id in unique_chat_ids:
-        chat_name = chat_id.split('-')[0]  # only display the name part
+        chat_name = str(chat_id).split('-')[0]  # only display the name part
         if st.button(chat_name, key=f"chat_button_{chat_id}"):  # use chat_id in key to make it unique
             st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
 
