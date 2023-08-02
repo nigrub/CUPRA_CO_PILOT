@@ -51,7 +51,8 @@ with st.sidebar:
     for chat_id in st.session_state.historical_conversations:
         chat_name = str(chat_id).split('-')[0]  # only display the name part
         # Add CSS to highlight the selected conversation button
-        if st.button(chat_name, key=f"chat_button_{chat_id}", style='background-color: lightblue' if st.session_state.chat_id == chat_id else None):
+        button_style = 'background-color: lightblue; border-radius: 5px; padding: 5px;'
+        if st.markdown(f'<div style="{button_style}">{chat_name}</div>', unsafe_allow_html=True, key=f"chat_button_{chat_id}"):
             st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
             st.session_state.chat_id = chat_id
 
