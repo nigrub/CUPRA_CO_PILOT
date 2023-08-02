@@ -48,7 +48,15 @@ with st.sidebar:
     all_records = sheet.get_all_records()
     unique_chat_ids = list(set(record['chat_id'] for record in all_records if record['chat_id'] != "load"))  # get unique chat_ids
     st.session_state.historical_conversations = st.session_state.historical_conversations if "historical_conversations" in st.session_state else unique_chat_ids
-    for chat_id in st.session_state.historical_conversations:
+
+    # Sort chat_ids based on the most recent message timestamp
+    sorted_chat_ids = sorted(
+        st.session_state.historical_conversations,
+        key=lambda chat_id: max(r["timestamp"] for r in all_records if r["chat_id"] == chat_id),
+        reverse=True
+    )
+
+    for chat_id in sorted_chat_ids:
         chat_name = str(chat_id).split('-')[0]  # only display the name part
         if st.button(chat_name, key=f"chat_button_{chat_id}", help=chat_id):
             st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
@@ -61,6 +69,11 @@ if "chat_id" not in st.session_state:
 if st.session_state.chat_id is None:
     if chat_name:
         st.session_state.chat_id = generate_chat_id(chat_name)
+
+# Display the currently engaged chat name at the top
+if st.session_state.chat_id:
+    current_chat_name = str(st.session_state.chat_id).split('-')[0]
+    st.header(f"Engaged Chat: {current_chat_name}")
 
 if st.session_state.chat_id:
     for message in st.session_state.messages:
