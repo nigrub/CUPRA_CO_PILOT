@@ -17,6 +17,13 @@ st.session_state["openai_model"] = "gpt-4"
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "chat_id" not in st.session_state:
+    st.session_state.chat_id = None
+if "openai_model" not in st.session_state:
+    st.session_state.openai_model = "gpt-4"
+if "historical_conversations" not in st.session_state:
+    st.session_state.historical_conversations = []
+
 
 # Function to generate a new chat_id
 def generate_chat_id(chat_name):
@@ -57,7 +64,7 @@ with st.sidebar:
     )
 
     # Display the currently engaged chat name at the top in the sidebar
-    if st.session_state.chat_id:
+    if st.session_state.chat_id is not None:
         current_chat_name = str(st.session_state.chat_id).split('-')[0]
         st.markdown(
             f'<div style="position: sticky; top: 10px; font-weight: bold; color: black; background-color: #f8f8f8; padding: 10px;">Engaged Chat: {current_chat_name}</div>',
