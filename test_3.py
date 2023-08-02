@@ -14,22 +14,6 @@ st.title("Welcome To The CUPRA Co-Pilot")
 openai.api_key = st.secrets["openai"]["api_key"]
 
 st.session_state["openai_model"] = "gpt-4"
-import openai
-import streamlit as st
-import os
-import gspread
-import pandas as pd
-from google.oauth2.service_account import Credentials
-from datetime import datetime, timezone
-import uuid
-import random
-import time
-
-st.title("Welcome To The CUPRA Co-Pilot")
-
-openai.api_key = st.secrets["openai"]["api_key"]
-
-st.session_state["openai_model"] = "gpt-4"
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -79,18 +63,22 @@ with st.sidebar:
         reverse=True
     )
 
-    # Display the currently engaged chat name at the top in the sidebar
-    if st.session_state.chat_id is not None:
-        current_chat_name = str(st.session_state.chat_id).split('-')[0]
-        st.markdown(
-            f'<div style="position: sticky; top: 10px; font-weight: bold; color: black; background-color: #f8f8f8; padding: 10px;">Engaged Chat: {current_chat_name}</div>',
-            unsafe_allow_html=True
-        )
+    # Removing the '-random digits' and formatting the chat ids
+    sorted_chat_ids = [chat_id.split('-')[0] for chat_id in sorted_chat_ids]
 
-    selected_chat_id = st.radio("Choose a conversation", options=sorted_chat_ids, key="selected_chat_id")
+    # Formatting for radio buttons with spaces
+    formatted_chat_ids = []
+    for i, chat_id in enumerate(sorted_chat_ids):
+        formatted_chat_ids.append(chat_id)
+        if i != len(sorted_chat_ids) - 1:
+            formatted_chat_ids.append('---')
+
+    selected_chat_id = st.radio("Choose a conversation", options=formatted_chat_ids, key="selected_chat_id")
+    selected_chat_id = selected_chat_id if selected_chat_id != '---' else None
     if selected_chat_id:
-        st.session_state.messages = [r for r in all_records if r["chat_id"] == selected_chat_id]
-        st.session_state.chat_id = selected_chat_id
+        selected_chat_id_full = [chat_id for chat_id in st.session_state.historical_conversations if chat_id.startswith(selected_chat_id)][0]
+        st.session_state.messages = [r for r in all_records if r["chat_id"] == selected_chat_id_full]
+        st.session_state.chat_id = selected_chat_id_full
 
 # Main chat
 if "chat_id" not in st.session_state:
