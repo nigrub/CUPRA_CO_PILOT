@@ -28,6 +28,15 @@ credentials = Credentials.from_service_account_file('credentials.json', scopes=s
 gc = gspread.authorize(credentials)
 sheet = gc.open('CUPRADB').sheet1
 
+# Custom CSS for the selected chat button
+selected_chat_style = """
+<style>
+.selected-chat {
+    background-color: lightblue;
+}
+</style>
+"""
+
 # Sidebar for input chat name and new conversation button
 with st.sidebar:
     st.header("Chat History")
@@ -45,12 +54,14 @@ with st.sidebar:
 
     # Display historical conversations
     st.header("Historical Conversations")
+    st.markdown(selected_chat_style, unsafe_allow_html=True)  # Inject custom CSS
     all_records = sheet.get_all_records()
     unique_chat_ids = list(set(record['chat_id'] for record in all_records if record['chat_id'] != "load"))  # get unique chat_ids
     st.session_state.historical_conversations = st.session_state.historical_conversations if "historical_conversations" in st.session_state else unique_chat_ids
     for chat_id in st.session_state.historical_conversations:
         chat_name = str(chat_id).split('-')[0]  # only display the name part
-        if st.button(chat_name, key=f"chat_button_{chat_id}", help=chat_id):
+        button_style = "selected-chat" if st.session_state.chat_id == chat_id else ""
+        if st.button(chat_name, key=f"chat_button_{chat_id}", style=button_style, help=chat_id):
             st.session_state.messages = [r for r in all_records if r["chat_id"] == chat_id]
             st.session_state.chat_id = chat_id
 
