@@ -9,6 +9,7 @@ import uuid
 import random
 import time
 
+
 st.title("Welcome To The CUPRA Co-Pilot")
 
 openai.api_key = st.secrets["openai"]["api_key"]

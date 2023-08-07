@@ -10,6 +10,11 @@ from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 from langchain.llms import HuggingFaceHub
 
+def pdf_chat_page():
+    # Your code for the PDF Chat page goes here
+    st.header("PDF Chat Page")
+    st.write("This is the PDF Chat page. You can put your PDF chat-related code here.")
+
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
