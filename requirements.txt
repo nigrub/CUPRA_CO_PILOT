@@ -7,3 +7,11 @@ langchain
 gspread
 pandas
 uuid
+
+PyPDF2
+faiss-cpu
+altair
+tiktoken
+huggingface-hub==0.14.1
+InstructorEmbedding
+sentence-transformers
