@@ -1,27 +1,17 @@
 import streamlit as st
-from PDF_Chat import pdf_chat_page
-from test_3 import test_3_page
+import PDF_Chat
+import test_3
 
-# Define the home page
-def home_page():
-    st.header("Welcome to My Multipage App")
-    st.write("This is the Home page. Choose a page from the sidebar to get started.")
+PAGES = {
+    "PDF Chat": PDF_Chat,
+    "Test 3": test_3
+}
 
 def main():
-    st.set_page_config(page_title="My Multipage App", page_icon=":book:")
-    st.sidebar.title("Navigation")
-
-    # Create a dictionary with page names as keys and corresponding functions as values
-    pages = {
-        "Home": home_page,
-        "PDF Chat": pdf_chat_page,
-        "Test 3": test_3_page
-    }
-
-    selected_page = st.sidebar.selectbox("Select a page:", list(pages.keys()))
-    pages[selected_page]()
-
+    st.sidebar.title('Navigation')
+    choice = st.sidebar.radio("Go to", list(PAGES.keys()))
+    page = PAGES[choice]
+    page.app()
 
 if __name__ == "__main__":
     main()
-
