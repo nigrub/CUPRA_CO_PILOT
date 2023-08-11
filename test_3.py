@@ -1,8 +1,6 @@
 import openai
 import streamlit as st
-import os
 import gspread
-import pandas as pd
 from google.oauth2.service_account import Credentials
 from datetime import datetime, timezone
 import uuid
@@ -36,7 +34,7 @@ def app():
         if st.button("New Conversation"):
             if chat_name:
                 st.session_state.chat_id = generate_chat_id(chat_name)
-                st.session_state.messages = []  # Reset the chat messages for a new conversation
+                st.session_state.messages = []
                 sheet.append_row([str(uuid.uuid4()), str(st.session_state.chat_id), str(datetime.now(timezone.utc)), "load", "load"])
 
         st.header("Historical Conversations")
@@ -51,7 +49,7 @@ def app():
         formatted_chat_names = sorted_chat_names if sorted_chat_names else ["No Conversations Available"]
         selected_chat_name = st.radio("Choose a conversation", options=formatted_chat_names, key="selected_chat_name")
 
-        if selected_chat_name and selected_chat_name != "No Conversations Available" and not st.session_state.messages:
+        if st.button("Load Chat History"):
             selected_chat_id_full = max((record['chat_id'] for record in all_records if record["chat_id"].startswith(selected_chat_name)), default=None)
             st.session_state.messages = [r for r in all_records if r["chat_id"] == selected_chat_id_full]
             st.session_state.chat_id = selected_chat_id_full
