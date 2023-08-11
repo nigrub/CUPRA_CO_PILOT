@@ -9,19 +9,19 @@ import uuid
 import random
 import time
 
+def test_3_page():
+    st.title("Welcome To The CUPRA Co-Pilot")
 
-st.title("Welcome To The CUPRA Co-Pilot")
+    openai.api_key = st.secrets["openai"]["api_key"]
+    st.session_state["openai_model"] = "gpt-4"
 
-openai.api_key = st.secrets["openai"]["api_key"]
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    if "chat_id" not in st.session_state:
+        st.session_state.chat_id = None
+    if "openai_model" not in st.session_state:
+        st.session_state.openai_model = "gpt-4"
 
-st.session_state["openai_model"] = "gpt-4"
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "chat_id" not in st.session_state:
-    st.session_state.chat_id = None
-if "openai_model" not in st.session_state:
-    st.session_state.openai_model = "gpt-4"
 
 # Function to generate a new chat_id
 def generate_chat_id(chat_name):
@@ -108,3 +108,6 @@ if st.session_state.chat_id:
                 message_placeholder.markdown(full_response)
         st.session_state.messages.append({"role": "assistant", "content": full_response, "chat_id": chat_id})
         sheet.append_row([str(uuid.uuid4()), str(chat_id), str(datetime.now(timezone.utc)), "assistant", full_response])  # Add assistant response to Google Sheet
+
+if __name__ == '__main__':
+    test_3_page()

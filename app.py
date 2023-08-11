@@ -2,6 +2,7 @@ import streamlit as st
 from pdf_chat import pdf_chat_page
 from test_3 import test_3_page
 
+# Define the home page
 def home_page():
     st.header("Welcome to My Multipage App")
     st.write("This is the Home page. Choose a page from the sidebar to get started.")
@@ -25,3 +26,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
