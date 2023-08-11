@@ -2,16 +2,15 @@ import streamlit as st
 import PDF_Chat
 import test_3
 
+# Set page configuration at the very start
+st.set_page_config(page_title="Your App Title", layout="wide")
+
 PAGES = {
     "PDF Chat": PDF_Chat,
     "Test 3": test_3
 }
 
-def main():
-    st.sidebar.title('Navigation')
-    choice = st.sidebar.radio("Go to", list(PAGES.keys()))
-    page = PAGES[choice]
-    page.app()
+selection = st.sidebar.radio("Go to", list(PAGES.keys()))
+page = PAGES[selection]
+page.app()
 
-if __name__ == "__main__":
-    main()
