@@ -68,14 +68,16 @@ def handle_userinput(user_question):
 def pdf_chat_page():
     load_dotenv()
 
-    # Set page config only once
-    st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
-    st.write(css, unsafe_allow_html=True)
-
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
+
+    # Set page config only once for the whole app
+    if not hasattr(st.session_state, "page_config_set"):
+        st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
+        st.write(css, unsafe_allow_html=True)
+        st.session_state.page_config_set = True
 
     st.header("Chat with multiple PDFs :books:")
     user_question = st.text_input("Ask a question about your documents:")
