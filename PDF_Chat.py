@@ -73,12 +73,6 @@ def pdf_chat_page():
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
 
-    # Set page config only once for the whole app
-    if not hasattr(st.session_state, "page_config_set"):
-        st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
-        st.write(css, unsafe_allow_html=True)
-        st.session_state.page_config_set = True
-
     st.header("Chat with multiple PDFs :books:")
     user_question = st.text_input("Ask a question about your documents:")
     if user_question:
@@ -96,4 +90,5 @@ def pdf_chat_page():
                 st.session_state.conversation = get_conversation_chain(vectorstore)
 
 if __name__ == '__main__':
+    # Call the page function
     pdf_chat_page()

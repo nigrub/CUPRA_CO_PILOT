@@ -18,11 +18,9 @@ def main():
         "Test 3": test_3_page
     }
 
-    # Use selectbox to choose the page
     selected_page = st.sidebar.selectbox("Select a page:", list(pages.keys()))
-
-    # Call the selected page function from the dictionary
     pages[selected_page]()
+
 
 if __name__ == "__main__":
     main()
