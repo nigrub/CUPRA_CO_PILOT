@@ -66,8 +66,7 @@ def handle_userinput(user_question):
 
 def app():
     load_dotenv()
-    st.set_page_config(page_title="Chat with multiple PDFs",
-                       page_icon=":books:")
+    st.title("Chat with multiple PDFs")
     st.write(css, unsafe_allow_html=True)
 
     if "conversation" not in st.session_state:
