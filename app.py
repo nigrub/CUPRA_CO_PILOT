@@ -1,5 +1,5 @@
 import streamlit as st
-from pdf_chat import pdf_chat_page
+from PDF_Chat import pdf_chat_page
 from test_3 import test_3_page
 
 # Define the home page
