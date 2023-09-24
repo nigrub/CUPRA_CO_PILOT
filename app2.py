@@ -8,8 +8,8 @@ st.set_page_config(page_title="Your App Title", layout="wide")
 
 PAGES = {
     "Home": "home",
-    "CSV Data Analyser": Document_Chat_Creation,
-    "Summary Chat": Summary_Chat,
+    "CSV Analyser": CSV_Analyser,
+    "CSV Summary": CSV_Summary,
     "PowerPoint Creation Tool": Powerpoint_Creation_Tool,
 }
 
