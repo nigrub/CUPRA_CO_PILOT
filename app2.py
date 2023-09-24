@@ -1,8 +1,7 @@
 import streamlit as st
 
 # Import other pages
-from pages import Document_Chatter, Powerpoint_Creation_Tool, Document_Chat_Creation
-import Summary_Chat
+from pages import Document_Chatter, Powerpoint_Creation_Tool, Document_Chat_Creation, Summary_Chat
 
 st.set_page_config(page_title="Your App Title", layout="wide")
 
