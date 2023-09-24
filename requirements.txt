@@ -7,7 +7,7 @@ langchain
 gspread
 pandas
 uuid
-
+python-pptx
 PyPDF2
 faiss-cpu
 altair
