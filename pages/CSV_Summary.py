@@ -89,7 +89,7 @@ def compute_means_for_type(tables, table_type, week_index):
     return means_df
 
 
-st.title('CSV Data Analyzer')
+st.title('CSV Data Summary')
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
 if uploaded_file:
@@ -126,7 +126,7 @@ if uploaded_file:
         # Format the 'Week' column for display
         filtered_df['Week'] = filtered_df['Week'].dt.strftime('%d/%m/%Y')
 
-        st.table(filtered_df.style.hide_index())
+        st.table(filtered_df)
 
         if st.button("Show Summary Statistics"):
             keyword = None
