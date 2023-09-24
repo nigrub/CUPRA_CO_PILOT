@@ -1,6 +1,10 @@
 import openai
+from tiktoken import TokenCounter
 import streamlit as st
 import pandas as pd
+
+openai.api_key = st.secrets["openai"]["api_key"]
+st.session_state["openai_model"] = "gpt-4"
 
 def cell_to_indices(cell_ref):
     col_ref, row_ref = ''.join(filter(str.isalpha, cell_ref)), ''.join(filter(str.isdigit, cell_ref))
@@ -53,13 +57,20 @@ def extract_tables(data):
         start_row, start_col = cell_to_indices(start_cell)
         end_row, end_col = cell_to_indices(end_cell)
         extracted_table = data.iloc[start_row:end_row + 1, start_col:end_col + 1]
-        extracted_table.rename(columns={extracted_table.columns[0]: 'Week'}, inplace=True)
-        extracted_table['Week'] = pd.to_datetime(extracted_table['Week'], format='%d/%m/%Y')
+        header_row = extracted_table.iloc[0]
+        extracted_table = extracted_table[1:]
+        extracted_table.columns = header_row
+
+        first_column_name = extracted_table.columns[0]
+        extracted_table[first_column_name] = pd.to_datetime(extracted_table[first_column_name], format='%d/%m/%Y')
+        extracted_table.rename(columns={first_column_name: 'Week'}, inplace=True)
+
         tables_data[table_name] = extracted_table
     return tables_data
 
+
+# Function to generate the initial question for the GPT API
 def generate_initial_question(selected_week):
-    # Generates the initial question for the GPT API based on the selected week
     question = f"Generate a summary and analysis for the data up to {selected_week}:"
     question += (
     "\n\n1. Visits – Compare the number of visits between the most recent week (ending 4th September) and the previous week. "
@@ -69,74 +80,160 @@ def generate_initial_question(selected_week):
     "any notable trends in model preferences."
     "\n\n3. Finance Calcs – Examine the week-over-week change in finance calculations. Highlight any records or significant changes "
     "in model preferences."
-    "\n\n4. Test Drive – Provide the number of test drive leads generated in the most recent week compared to the previous week."
-    "\n\n5. Contact Me – Compare the number of contact leads generated in the most recent week with the previous week."
-    "\n\n6. Part Exchange Leads – Analyze the number of part exchange leads generated in the most recent week and compare it to the "
-    "previous week. Mention any trends over the last four weeks."
-    "\n\n7. Virtual Showroom – Provide insights into the number of leads generated in the virtual showroom for the most recent week "
-    "and any notable changes."
-    "\n\n8. TLA lead gen. – Compare the number of leads generated through TLA in the most recent week with the previous week. Highlight "
-    "any contributions towards the September target."
-    "\n\nPlease provide detailed information and statistics for each of the above points."
+    "\n\n4. Testdrive Requests – Analyze the week-over-week change in test drive requests. Identify any significant changes in "
+    "test drive preferences or sources of requests."
+    "\n\n5. Contact Me Pages – Analyze the week-over-week change in the use of 'Contact Me' pages. Highlight any trends or notable "
+    "changes in the use of these pages."
+    "\n\n6. Part Exchange Requests – Examine the week-over-week change in part exchange requests submitted to retailers. Highlight "
+    "significant changes or trends in the types of vehicles being exchanged."
     )
     return question
 
-# Load the data
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+# Function to answer Question 1
+def answer_question_1(tables_data, selected_week_index):
+    data = tables_data["Overall Traffic Visits"]
+    current_week_visits = float(data.iloc[selected_week_index, 2])  # 3rd column
+    previous_week_visits = float(data.iloc[selected_week_index - 1, 2]) if selected_week_index > 0 else None
+    if previous_week_visits is not None:
+        change = current_week_visits - previous_week_visits
+        return f"The number of visits in the most recent week increased by {change} from the previous week."
+    else:
+        return f"The number of visits in the most recent week is {current_week_visits}."
+
+# Function to answer Question 2
+def answer_question_2(tables_data, selected_week_index):
+    data = tables_data["Overall Traffic Actions"]
+    current_week_configs = float(data.iloc[selected_week_index, 2])  # 3rd column
+    previous_week_configs = float(data.iloc[selected_week_index - 1, 2]) if selected_week_index > 0 else None
+    if previous_week_configs is not None:
+        change = current_week_configs - previous_week_configs
+        return f"The number of configurations in the most recent week increased by {change} from the previous week."
+    else:
+        return f"The number of configurations in the most recent week is {current_week_configs}."
+
+# Function to answer Question 3
+def answer_question_3(tables_data, selected_week_index):
+    data = tables_data["Overall Traffic Actions"]
+    current_week_finance_calcs = float(data.iloc[selected_week_index, 1])  # 2nd column
+    previous_week_finance_calcs = float(data.iloc[selected_week_index - 1, 1]) if selected_week_index > 0 else None
+    if previous_week_finance_calcs is not None:
+        change = current_week_finance_calcs - previous_week_finance_calcs
+        return f"The number of finance calculations in the most recent week increased by {change} from the previous week."
+    else:
+        return f"The number of finance calculations in the most recent week is {current_week_finance_calcs}."
+
+# Function to answer Question 4
+def answer_question_4(tables_data, selected_week_index):
+    data = tables_data["New Visitors Leads"]
+    current_week_testdrive_requests = float(data.iloc[selected_week_index, 1])  # 2nd column
+    previous_week_testdrive_requests = float(data.iloc[selected_week_index - 1, 1]) if selected_week_index > 0 else None
+    if previous_week_testdrive_requests is not None:
+        change = current_week_testdrive_requests - previous_week_testdrive_requests
+        return f"The number of test drive requests in the most recent week increased by {change} from the previous week."
+    else:
+        return f"The number of test drive requests in the most recent week is {current_week_testdrive_requests}."
+
+# Function to answer Question 5
+def answer_question_5(tables_data, selected_week_index):
+    data = tables_data["New Visitors Actions"]
+    current_week_contact_me_pages = float(data.iloc[selected_week_index, 2])  # 3rd column
+    previous_week_contact_me_pages = float(data.iloc[selected_week_index - 1, 2]) if selected_week_index > 0 else None
+    if previous_week_contact_me_pages is not None:
+        change = current_week_contact_me_pages - previous_week_contact_me_pages
+        return f"The use of 'Contact Me' pages in the most recent week increased by {change} from the previous week."
+    else:
+        return f"The use of 'Contact Me' pages in the most recent week is {current_week_contact_me_pages}."
+
+# Function to answer Question 6
+def answer_question_6(tables_data, selected_week_index):
+    data = tables_data["Overall Traffic Actions"]
+    current_week_part_exchange_requests = float(data.iloc[selected_week_index, 3])  # 4th column
+    previous_week_part_exchange_requests = float(data.iloc[selected_week_index - 1, 3]) if selected_week_index > 0 else None
+    if previous_week_part_exchange_requests is not None:
+        change = current_week_part_exchange_requests - previous_week_part_exchange_requests
+        return f"The number of part exchange requests in the most recent week increased by {change} from the previous week."
+    else:
+        return f"The number of part exchange requests in the most recent week is {current_week_part_exchange_requests}."
+
+# Allow the user to upload a CSV file
+
+
+MAX_TOKENS = 2048
+
+token_counter = TokenCounter()
+
+def get_token_count(text):
+    """Count the number of tokens in a text string using tiktoken."""
+    return token_counter.count_tokens(text)
+
+def truncate_dataframe(dataframe, max_tokens=1500):
+    """Truncate DataFrame rows to fit within max_tokens."""
+    df_string = dataframe.to_string(index=False)
+    while get_token_count(df_string) > max_tokens:
+        dataframe = dataframe.iloc[:-1]
+        df_string = dataframe.to_string(index=False)
+    return df_string
+
+def truncate_text(text, max_tokens=MAX_TOKENS):
+    """Truncate the given text to fit within max_tokens."""
+    tokens = list(openai.tokenizer.tokenize(text))
+    while len(tokens) > max_tokens:
+        tokens = tokens[:-1]
+    return openai.tokenizer.detokenize(tokens)
+
+def chat_with_document(user_query, selected_week, overall_traffic_dataframe, available_dates):
+    # Convert 'Overall Traffic Visits' dataframe to textual representation
+    data_context = truncate_dataframe(overall_traffic_dataframe)
+    data_context = f"Overall Traffic Visits up to {selected_week}:\n{data_context}"
+
+    # Create the modified query
+    combined_text = f"{data_context}. {user_query}"
+
+    if get_token_count(combined_text) > MAX_TOKENS:
+        tokens_to_remove = get_token_count(combined_text) - MAX_TOKENS
+        truncated_user_query = truncate_text(user_query, len(user_query) - tokens_to_remove)
+        combined_text = f"{data_context}. {truncated_user_query}"
+
+    # Make an API call to GPT-4 with the modified query
+    response = openai.Completion.create(
+        engine="davinci",
+        prompt=combined_text,
+        max_tokens=500,
+        n=1,
+        stop=None,
+        temperature=0.1,
+    )
+
+    # Extract the generated answer from the GPT-4 response
+    chat_response = response.choices[0].text.strip()
+
+    return chat_response
+
+
+
+# Your streamlit interface code goes here
+uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
+
 if uploaded_file is not None:
     data = pd.read_csv(uploaded_file)
     tables_dataframes = extract_tables(data)
     available_dates = list(tables_dataframes["Overall Traffic Visits"]['Week'].dt.strftime('%d/%m/%Y'))
     selected_week = st.selectbox('Select a week for YTD view', available_dates)
 
-    # Date Selector
-    available_dates = [
-        "26/12/2022", "02/01/2023", "09/01/2023", "16/01/2023", "23/01/2023", "30/01/2023",
-        "06/02/2023", "13/02/2023", "20/02/2023", "27/02/2023", "06/03/2023", "13/03/2023",
-        "20/03/2023", "27/03/2023", "03/04/2023", "10/04/2023", "17/04/2023", "24/04/2023",
-        "01/05/2023", "08/05/2023", "15/05/2023", "22/05/2023", "29/05/2023", "05/06/2023",
-        "12/06/2023", "19/06/2023", "26/06/2023", "03/07/2023", "10/07/2023", "17/07/2023",
-        "24/07/2023", "31/07/2023", "07/08/2023", "14/08/2023", "21/08/2023", "28/08/2023",
-        "04/09/2023", "11/09/2023", "18/09/2023", "25/09/2023", "02/10/2023", "09/10/2023",
-        "16/10/2023", "23/10/2023", "30/10/2023", "06/11/2023", "13/11/2023", "20/11/2023",
-        "27/11/2023", "04/12/2023", "11/12/2023", "18/12/2023", "25/12/2023"
-    ]
-    selected_week = st.selectbox('Select a week for YTD view', available_dates)
+    # Display answers to the fixed questions
+    selected_week_index = available_dates.index(selected_week)
+    st.write("1. ", answer_question_1(tables_dataframes, selected_week_index))
+    st.write("2. ", answer_question_2(tables_dataframes, selected_week_index))
+    st.write("3. ", answer_question_3(tables_dataframes, selected_week_index))
+    st.write("4. ", answer_question_4(tables_dataframes, selected_week_index))
+    st.write("5. ", answer_question_5(tables_dataframes, selected_week_index))
+    st.write("6. ", answer_question_6(tables_dataframes, selected_week_index))
 
-    # Setting up the chatbot interface
-    user_input = st.text_input("Ask me about the data:")
-    if user_input:
-        response = chat_with_document(user_input, selected_week)
-        st.write(response)
+    user_query = st.text_input("Ask a question about the data:")
+    if user_query:
+        chat_response = chat_with_document(user_query, selected_week, tables_dataframes["Overall Traffic Visits"], available_dates)
+        st.write("ChatGPT:", chat_response)
 
-def chat_with_document(user_query, selected_week):
-    # Convert the selected week to its index for calculations
-    reverse_indexed_dates = {date: i for i, date in enumerate(available_dates)}
-    selected_week_index = reverse_indexed_dates[selected_week]
 
-    # Based on user_query, extract the required information from tables_dataframes
-    # and consider only rows up to selected_week_index
 
-    # ... (Your logic to process the user's query and extract information)
 
-    return "Response based on the user's query and selected date"
-
-st.title("Welcome To The CUPRA Co-Pilot")
-openai.api_key = st.secrets["openai"]["api_key"]
-
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-if uploaded_file is not None:
-    data = pd.read_csv(uploaded_file)
-    tables_dataframes = extract_tables(data)
-    available_dates = list(tables_dataframes["Overall Traffic Visits"]['Week'].dt.strftime('%d/%m/%Y'))
-    selected_week = st.selectbox('Select a week for YTD view', available_dates)
-
-    initial_question = generate_initial_question(selected_week)
-    response = openai.Completion.create(model="gpt-4", prompt=initial_question, max_tokens=500)
-    st.write("GPT's response to the initial question goes here")  # Replace this with the actual GPT response
-
-    user_input = st.text_input("Ask me about the data:")
-    if user_input:
-        response = chat_with_document(user_input, selected_week, tables_dataframes)
-        # Display the response
-        st.write(response)

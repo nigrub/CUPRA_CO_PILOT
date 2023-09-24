@@ -1,4 +1,3 @@
-import openai
 import streamlit as st
 import pandas as pd
 from pptx import Presentation
@@ -7,17 +6,16 @@ from pptx.enum.chart import XL_CHART_TYPE
 from pptx.util import Inches
 
 
-
 def cell_to_indices(cell_ref):
     col_ref, row_ref = ''.join(filter(str.isalpha, cell_ref)), ''.join(filter(str.isdigit, cell_ref))
     col_idx = sum([(ord(char) - ord('A') + 1) * (26 ** idx) for idx, char in enumerate(col_ref[::-1])]) - 1
     row_idx = int(row_ref) - 1
     return row_idx, col_idx
-    pass
+
 
 def extract_tables(data):
     tables_references = {
-        "Overall Traffic Visits": ("A11", "S64"),
+"Overall Traffic Visits": ("A11", "S64"),
         "Overall Traffic Leads": ("A70", "D122"),
         "Overall Traffic Actions": ("A128", "F180"),
         "New Visitors Visits": ("A194", "S247"),
@@ -60,62 +58,51 @@ def extract_tables(data):
         start_row, start_col = cell_to_indices(start_cell)
         end_row, end_col = cell_to_indices(end_cell)
         extracted_table = data.iloc[start_row:end_row + 1, start_col:end_col + 1]
-        extracted_table.rename(columns={extracted_table.columns[0]: 'Week'}, inplace=True)
-        extracted_table['Week'] = pd.to_datetime(extracted_table['Week'], format='%d/%m/%Y')
+        header_row = extracted_table.iloc[0]
+        extracted_table = extracted_table[1:]
+        extracted_table.columns = header_row
+
+        first_column_name = extracted_table.columns[0]
+        extracted_table[first_column_name] = pd.to_datetime(extracted_table[first_column_name], format='%d/%m/%Y')
+        extracted_table.rename(columns={first_column_name: 'Week'}, inplace=True)
+
         tables_data[table_name] = extracted_table
     return tables_data
 
-# Defining the create_presentation function in detail
 
 def create_presentation(dataframes, selected_week):
-    # Create a new PowerPoint presentation
     prs = Presentation()
 
-    # Extract relevant dataframes
-    leads_df = dataframes['TLA Lead Gen.']
+    # Extract relevant dataframes based on their names
+    leads_df = dataframes['Overall Traffic Leads']
     visits_df = dataframes['Overall Traffic Visits']
-    actions_df = dataframes['Overall Actions']
+    actions_df = dataframes['Overall Traffic Actions']
 
     # Filter data up to the selected week
     leads_df = leads_df[leads_df['Week'] <= pd.to_datetime(selected_week)]
     visits_df = visits_df[visits_df['Week'] <= pd.to_datetime(selected_week)]
     actions_df = actions_df[actions_df['Week'] <= pd.to_datetime(selected_week)]
 
-    # Calculate YTD totals
-    total_leads_ytd = leads_df['TLA Leads'].sum()
-    total_visits_ytd = visits_df['Visits'].sum()
-    total_actions_ytd = actions_df['Actions'].sum()
-
-    # Create a new slide with title and content layout
-    slide = prs.slides.add_slide(prs.slide_layouts[1])
-    title = slide.shapes.title
-    title.text = "Summary Up To " + selected_week
-
-    # Add YTD totals to the slide
-    content = slide.placeholders[1]
-    content.text = f"Total Leads YTD: {total_leads_ytd}\nTotal Visits YTD: {total_visits_ytd}\nTotal Actions YTD: {total_actions_ytd}"
-
-    # Create a function to add a chart to the presentation
-    def add_chart_to_slide(df, column, title_text, x, y):
+    def add_chart_to_slide(df, column, title_text):
+        slide = prs.slides.add_slide(prs.slide_layouts[5])
+        title = slide.shapes.title
+        title.text = title_text + " Up To " + selected_week
         chart_data = CategoryChartData()
         chart_data.categories = df['Week'].dt.strftime('%d/%m/%Y')
         chart_data.add_series(title_text, df[column])
 
-        x, y, cx, cy = Inches(x), Inches(y), Inches(4), Inches(3)
+        x, y, cx, cy = Inches(1), Inches(1), Inches(8), Inches(6)
         slide.shapes.add_chart(
             XL_CHART_TYPE.LINE, x, y, cx, cy, chart_data
         )
 
     # Add charts to the slide
-    add_chart_to_slide(leads_df, 'TLA Leads', 'Leads', 0.5, 3)
-    add_chart_to_slide(visits_df, 'Visits', 'Visits', 5, 3)
-    add_chart_to_slide(actions_df, 'Actions', 'Actions', 0.5, 6)
+    add_chart_to_slide(leads_df, leads_df.columns[1], 'Leads')
+    add_chart_to_slide(visits_df, visits_df.columns[2], 'Visits')
+    add_chart_to_slide(actions_df, actions_df.columns[1], 'Actions')
 
     # Save the presentation
-    prs.save("/mnt/data/summary_presentation.pptx")
-
-# Placeholder output to confirm the function definition
-"create_presentation function defined successfully!"
+    prs.save("summary_presentation.pptx")
 
 
 st.title("Welcome To The CUPRA Co-Pilot")
@@ -131,5 +118,5 @@ if uploaded_file is not None:
     create_presentation(tables_dataframes, selected_week)
 
     # Provide a download link for the PowerPoint
-    st.write("Download the generated [PowerPoint presentation here](/mnt/data/summary_presentation.pptx).")
+    st.write("Download the generated [PowerPoint presentation here](summary_presentation.pptx).")
 
