@@ -157,42 +157,13 @@ def answer_question_6(tables_data, selected_week_index):
 
 # Allow the user to upload a CSV file
 
-
-MAX_TOKENS = 2048
-
-token_counter = TokenCounter()
-
-def get_token_count(text):
-    """Count the number of tokens in a text string using tiktoken."""
-    return token_counter.count_tokens(text)
-
-def truncate_dataframe(dataframe, max_tokens=1500):
-    """Truncate DataFrame rows to fit within max_tokens."""
-    df_string = dataframe.to_string(index=False)
-    while get_token_count(df_string) > max_tokens:
-        dataframe = dataframe.iloc[:-1]
-        df_string = dataframe.to_string(index=False)
-    return df_string
-
-def truncate_text(text, max_tokens=MAX_TOKENS):
-    """Truncate the given text to fit within max_tokens."""
-    tokens = list(openai.tokenizer.tokenize(text))
-    while len(tokens) > max_tokens:
-        tokens = tokens[:-1]
-    return openai.tokenizer.detokenize(tokens)
-
-def chat_with_document(user_query, selected_week, overall_traffic_dataframe, available_dates):
+def chat_with_document(user_query, selected_week, overall_traffic_dataframe):
     # Convert 'Overall Traffic Visits' dataframe to textual representation
-    data_context = truncate_dataframe(overall_traffic_dataframe)
+    data_context = overall_traffic_dataframe.head(5).to_string(index=False)
     data_context = f"Overall Traffic Visits up to {selected_week}:\n{data_context}"
 
     # Create the modified query
     combined_text = f"{data_context}. {user_query}"
-
-    if get_token_count(combined_text) > MAX_TOKENS:
-        tokens_to_remove = get_token_count(combined_text) - MAX_TOKENS
-        truncated_user_query = truncate_text(user_query, len(user_query) - tokens_to_remove)
-        combined_text = f"{data_context}. {truncated_user_query}"
 
     # Make an API call to GPT-4 with the modified query
     response = openai.Completion.create(
@@ -209,9 +180,7 @@ def chat_with_document(user_query, selected_week, overall_traffic_dataframe, ava
 
     return chat_response
 
-
-
-# Your streamlit interface code goes here
+# Your streamlit interface code remains the same
 uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
 
 if uploaded_file is not None:
@@ -231,8 +200,9 @@ if uploaded_file is not None:
 
     user_query = st.text_input("Ask a question about the data:")
     if user_query:
-        chat_response = chat_with_document(user_query, selected_week, tables_dataframes["Overall Traffic Visits"], available_dates)
+        chat_response = chat_with_document(user_query, selected_week, tables_dataframes["Overall Traffic Visits"])
         st.write("ChatGPT:", chat_response)
+
 
 
 
