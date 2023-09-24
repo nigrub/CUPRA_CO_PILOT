@@ -1,14 +1,14 @@
 import streamlit as st
 
 # Import other pages
-from pages import Document_Chatter, Powerpoint_Creation_Tool, Document_Chat_Creation, Summary_Chat
+from pages import Powerpoint_Creation_Tool, Document_Chat_Creation, Summary_Chat
+import Document_Chatter
 
 st.set_page_config(page_title="Your App Title", layout="wide")
 
 PAGES = {
     "Home": "home",
-    "CSV Data Analyzer": Document_Chat_Creation,
-    "Document Chatter": Document_Chatter,
+    "CSV Data Analyser": Document_Chat_Creation,
     "Summary Chat": Summary_Chat,
     "PowerPoint Creation Tool": Powerpoint_Creation_Tool,
 }
