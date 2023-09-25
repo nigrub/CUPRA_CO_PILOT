@@ -84,7 +84,7 @@ def display_charts_on_streamlit(dataframes, selected_week):
     st.subheader(f"Actions Up To {selected_week}")
     st.line_chart(actions_df.set_index('Week')[actions_df.columns[1]])
 
-st.title("Welcome To The CUPRA Co-Pilot")
+st.title("Welcome To The Powerpoint Creator")
 
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 if uploaded_file is not None:
