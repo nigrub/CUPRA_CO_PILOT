@@ -11,6 +11,6 @@ PAGES = {
     "CSV Analyser": CSV_Analyser,
     "CSV Summary": CSV_Summary,
     "Power Point Creator": Powerpoint_Creator,
-    "PDF Chat": Data_Chat,
+    "Data Chat": Data_Chat,
 }
 
