@@ -2,6 +2,8 @@ import openai
 import streamlit as st
 import pandas as pd
 
+st.title('CSV Data Analyser')
+
 openai.api_key = st.secrets["openai"]["api_key"]
 st.session_state["openai_model"] = "gpt-4"
 
