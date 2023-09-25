@@ -10,6 +10,19 @@ from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 from langchain.llms import HuggingFaceHub
 
+def handle_userinput(user_question):
+    if callable(st.session_state.conversation):
+        response = st.session_state.conversation({'question': user_question})
+        st.session_state.chat_history = response['chat_history']
+
+        for i, message in enumerate(st.session_state.chat_history):
+            if i % 2 == 0:
+                st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+            else:
+                st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+    else:
+        st.warning("Please process the PDFs first before asking a question.")
+
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
