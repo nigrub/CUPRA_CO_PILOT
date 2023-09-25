@@ -10,4 +10,8 @@ PAGES = {
     "Home": "home",
     "CSV Analyser": CSV_Analyser,
     "CSV Summary": CSV_Summary,
+}
 
+else:
+    page = PAGES[selection]
+    page.app2()
