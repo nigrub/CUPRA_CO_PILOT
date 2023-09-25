@@ -156,31 +156,6 @@ def answer_question_6(tables_data, selected_week_index):
     else:
         return f"The number of part exchange requests in the most recent week is {current_week_part_exchange_requests}."
 
-# Allow the user to upload a CSV file
-
-def chat_with_document(user_query, selected_week, overall_traffic_dataframe):
-    # Convert 'Overall Traffic Visits' dataframe to textual representation
-    data_context = overall_traffic_dataframe.head(5).to_string(index=False)
-    data_context = f"Overall Traffic Visits up to {selected_week}:\n{data_context}"
-
-    # Create the modified query
-    combined_text = f"{data_context}. {user_query}"
-
-    # Make an API call to GPT-4 with the modified query
-    response = openai.Completion.create(
-        engine="davinci",
-        prompt=combined_text,
-        max_tokens=500,
-        n=1,
-        stop=None,
-        temperature=0.1,
-    )
-
-    # Extract the generated answer from the GPT-4 response
-    chat_response = response.choices[0].text.strip()
-
-    return chat_response
-
 # Your streamlit interface code remains the same
 uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
 
@@ -199,10 +174,6 @@ if uploaded_file is not None:
     st.write("5. ", answer_question_5(tables_dataframes, selected_week_index))
     st.write("6. ", answer_question_6(tables_dataframes, selected_week_index))
 
-    user_query = st.text_input("Ask a question about the data:")
-    if user_query:
-        chat_response = chat_with_document(user_query, selected_week, tables_dataframes["Overall Traffic Visits"])
-        st.write("ChatGPT:", chat_response)
 
 
 
