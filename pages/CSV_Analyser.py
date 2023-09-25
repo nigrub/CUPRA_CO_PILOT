@@ -1,5 +1,4 @@
 import openai
-from tiktoken import TokenCounter
 import streamlit as st
 import pandas as pd
 
