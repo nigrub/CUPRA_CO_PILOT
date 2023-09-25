@@ -64,7 +64,7 @@ def handle_userinput(user_question):
                 "{{MSG}}", message.content), unsafe_allow_html=True)
 
 
-def app():
+def Home():
     load_dotenv()
     st.title("Chat with multiple PDFs")
     st.write(css, unsafe_allow_html=True)
@@ -98,3 +98,5 @@ def app():
                 st.session_state.conversation = get_conversation_chain(
                     vectorstore)
 
+if __name__ == '__main__':
+    Home()
