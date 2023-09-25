@@ -10,19 +10,6 @@ from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 from langchain.llms import HuggingFaceHub
 
-def handle_userinput(user_question):
-    if callable(st.session_state.conversation):
-        response = st.session_state.conversation({'question': user_question})
-        st.session_state.chat_history = response['chat_history']
-
-        for i, message in enumerate(st.session_state.chat_history):
-            if i % 2 == 0:
-                st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
-            else:
-                st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
-    else:
-        st.warning("Please process the PDFs first before asking a question.")
-
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
@@ -77,37 +64,37 @@ def handle_userinput(user_question):
                 "{{MSG}}", message.content), unsafe_allow_html=True)
 
 
+def app():
+    load_dotenv()
+    st.title("Chat with multiple PDFs")
+    st.write(css, unsafe_allow_html=True)
 
-load_dotenv()
-st.title("Chat with multiple PDFs")
-st.write(css, unsafe_allow_html=True)
+    if "conversation" not in st.session_state:
+        st.session_state.conversation = None
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = None
 
-if "conversation" not in st.session_state:
-    st.session_state.conversation = None
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = None
+    st.header("Chat with multiple PDFs :books:")
+    user_question = st.text_input("Ask a question about your documents:")
+    if user_question:
+        handle_userinput(user_question)
 
-st.header("Chat with multiple PDFs :books:")
-user_question = st.text_input("Ask a question about your documents:")
-if user_question:
-    handle_userinput(user_question)
+    with st.sidebar:
+        st.subheader("Your documents")
+        pdf_docs = st.file_uploader(
+            "Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
+        if st.button("Process"):
+            with st.spinner("Processing"):
+                # get pdf text
+                raw_text = get_pdf_text(pdf_docs)
 
-with st.sidebar:
-    st.subheader("Your documents")
-    pdf_docs = st.file_uploader(
-        "Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
-    if st.button("Process"):
-        with st.spinner("Processing"):
-            # get pdf text
-            raw_text = get_pdf_text(pdf_docs)
+                # get the text chunks
+                text_chunks = get_text_chunks(raw_text)
 
-            # get the text chunks
-            text_chunks = get_text_chunks(raw_text)
+                # create vector store
+                vectorstore = get_vectorstore(text_chunks)
 
-            # create vector store
-            vectorstore = get_vectorstore(text_chunks)
-
-            # create conversation chain
-            st.session_state.conversation = get_conversation_chain(
-                vectorstore)
+                # create conversation chain
+                st.session_state.conversation = get_conversation_chain(
+                    vectorstore)
 
