@@ -107,3 +107,4 @@ dmypy.json
 
 .streamlit/secrets.toml
 credentials.josn
+secrets.toml
