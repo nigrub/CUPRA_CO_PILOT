@@ -1,7 +1,10 @@
 import streamlit as st
 
 # Import other pages
-from pages import CSV_Summary, CSV_Analyser, Data_Chat, Powerpoint_Creator
+import CSV_Summary
+import Data_Chat
+import CSV_Analyser
+import Powerpoint_Creator
 
 st.set_page_config(page_title="Your App Title", layout="wide")
 st.title("Welcome To The App")
