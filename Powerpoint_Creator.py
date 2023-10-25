@@ -77,15 +77,6 @@ def display_charts_on_streamlit(dataframes, selected_week):
     # Display charts on Streamlit
 
 def app():
-    st.subheader(f"Leads Up To {selected_week}")
-    st.line_chart(leads_df.set_index('Week')[leads_df.columns[1]])
-
-    st.subheader(f"Visits Up To {selected_week}")
-    st.line_chart(visits_df.set_index('Week')[visits_df.columns[2]])
-
-    st.subheader(f"Actions Up To {selected_week}")
-    st.line_chart(actions_df.set_index('Week')[actions_df.columns[1]])
-
     st.title("Welcome To The Powerpoint Creator")
 
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -95,8 +86,12 @@ def app():
         available_dates = list(tables_dataframes["Overall Traffic Visits"]['Week'].dt.strftime('%d/%m/%Y'))
         selected_week = st.selectbox('Select a week for YTD view', available_dates)
 
-        # Display charts on Streamlit
-        display_charts_on_streamlit(tables_dataframes, selected_week)
+        # Make sure that everything that uses 'selected_week' comes after it's defined, inside this 'if' block.
+        if selected_week:  # checking if 'selected_week' is not None or empty
+            display_charts_on_streamlit(tables_dataframes, selected_week)
+    else:
+        st.warning(
+            "No file uploaded. Please upload a CSV file to proceed.")  # Optional message for when no file is uploaded.
 
 if __name__ == "__main__":
     app()
