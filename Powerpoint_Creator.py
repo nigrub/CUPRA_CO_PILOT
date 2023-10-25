@@ -98,6 +98,5 @@ def app():
         # Display charts on Streamlit
         display_charts_on_streamlit(tables_dataframes, selected_week)
 
-
 if __name__ == "__main__":
     app()
