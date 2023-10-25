@@ -77,14 +77,14 @@ def display_charts_on_streamlit(dataframes, selected_week):
     # Display charts on Streamlit
 
 def app():
-        st.subheader(f"Leads Up To {selected_week}")
-        st.line_chart(leads_df.set_index('Week')[leads_df.columns[1]])
+    st.subheader(f"Leads Up To {selected_week}")
+    st.line_chart(leads_df.set_index('Week')[leads_df.columns[1]])
 
-        st.subheader(f"Visits Up To {selected_week}")
-        st.line_chart(visits_df.set_index('Week')[visits_df.columns[2]])
+    st.subheader(f"Visits Up To {selected_week}")
+    st.line_chart(visits_df.set_index('Week')[visits_df.columns[2]])
 
-        st.subheader(f"Actions Up To {selected_week}")
-        st.line_chart(actions_df.set_index('Week')[actions_df.columns[1]])
+    st.subheader(f"Actions Up To {selected_week}")
+    st.line_chart(actions_df.set_index('Week')[actions_df.columns[1]])
 
     st.title("Welcome To The Powerpoint Creator")
 
