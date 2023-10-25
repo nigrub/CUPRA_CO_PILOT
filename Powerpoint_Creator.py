@@ -75,23 +75,29 @@ def display_charts_on_streamlit(dataframes, selected_week):
     actions_df = actions_df[actions_df['Week'] <= pd.to_datetime(selected_week)]
 
     # Display charts on Streamlit
-    st.subheader(f"Leads Up To {selected_week}")
-    st.line_chart(leads_df.set_index('Week')[leads_df.columns[1]])
 
-    st.subheader(f"Visits Up To {selected_week}")
-    st.line_chart(visits_df.set_index('Week')[visits_df.columns[2]])
+def app():
+        st.subheader(f"Leads Up To {selected_week}")
+        st.line_chart(leads_df.set_index('Week')[leads_df.columns[1]])
 
-    st.subheader(f"Actions Up To {selected_week}")
-    st.line_chart(actions_df.set_index('Week')[actions_df.columns[1]])
+        st.subheader(f"Visits Up To {selected_week}")
+        st.line_chart(visits_df.set_index('Week')[visits_df.columns[2]])
 
-st.title("Welcome To The Powerpoint Creator")
+        st.subheader(f"Actions Up To {selected_week}")
+        st.line_chart(actions_df.set_index('Week')[actions_df.columns[1]])
 
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-if uploaded_file is not None:
-    data = pd.read_csv(uploaded_file)
-    tables_dataframes = extract_tables(data)
-    available_dates = list(tables_dataframes["Overall Traffic Visits"]['Week'].dt.strftime('%d/%m/%Y'))
-    selected_week = st.selectbox('Select a week for YTD view', available_dates)
+    st.title("Welcome To The Powerpoint Creator")
 
-    # Display charts on Streamlit
-    display_charts_on_streamlit(tables_dataframes, selected_week)
+    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+    if uploaded_file is not None:
+        data = pd.read_csv(uploaded_file)
+        tables_dataframes = extract_tables(data)
+        available_dates = list(tables_dataframes["Overall Traffic Visits"]['Week'].dt.strftime('%d/%m/%Y'))
+        selected_week = st.selectbox('Select a week for YTD view', available_dates)
+
+        # Display charts on Streamlit
+        display_charts_on_streamlit(tables_dataframes, selected_week)
+
+
+if __name__ == "__main__":
+    app()

@@ -1,4 +1,3 @@
-import openai
 import streamlit as st
 import pandas as pd
 
@@ -10,7 +9,7 @@ def cell_to_indices(cell_ref):
 
 def extract_tables(data):
     tables_references = {
-        "Overall Traffic Visits": ("A11", "S64"),
+"Overall Traffic Visits": ("A11", "S64"),
         "Overall Traffic Leads": ("A70", "D122"),
         "Overall Traffic Actions": ("A128", "F180"),
         "New Visitors Visits": ("A194", "S247"),
@@ -53,54 +52,39 @@ def extract_tables(data):
         start_row, start_col = cell_to_indices(start_cell)
         end_row, end_col = cell_to_indices(end_cell)
         extracted_table = data.iloc[start_row:end_row + 1, start_col:end_col + 1]
-        extracted_table.rename(columns={extracted_table.columns[0]: 'Week'}, inplace=True)
-        extracted_table['Week'] = pd.to_datetime(extracted_table['Week'], format='%d/%m/%Y')
+        header_row = extracted_table.iloc[0]
+        extracted_table = extracted_table[1:]
+        extracted_table.columns = header_row
+
+        first_column_name = extracted_table.columns[0]
+        extracted_table[first_column_name] = pd.to_datetime(extracted_table[first_column_name], format='%d/%m/%Y')
+        extracted_table.rename(columns={first_column_name: 'Week'}, inplace=True)
+
         tables_data[table_name] = extracted_table
     return tables_data
 
+def display_charts_on_streamlit(dataframes, selected_week):
+    # Extract relevant dataframes based on their names
+    leads_df = dataframes['Overall Traffic Leads']
+    visits_df = dataframes['Overall Traffic Visits']
+    actions_df = dataframes['Overall Traffic Actions']
 
-# Load the data
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-if uploaded_file is not None:
-    data = pd.read_csv(uploaded_file)
-    tables_dataframes = extract_tables(data)
-    available_dates = list(tables_dataframes["Overall Traffic Visits"]['Week'].dt.strftime('%d/%m/%Y'))
-    selected_week = st.selectbox('Select a week for YTD view', available_dates)
+    # Filter data up to the selected week
+    leads_df = leads_df[leads_df['Week'] <= pd.to_datetime(selected_week)]
+    visits_df = visits_df[visits_df['Week'] <= pd.to_datetime(selected_week)]
+    actions_df = actions_df[actions_df['Week'] <= pd.to_datetime(selected_week)]
 
-    # Date Selector
-    available_dates = [
-        "26/12/2022", "02/01/2023", "09/01/2023", "16/01/2023", "23/01/2023", "30/01/2023",
-        "06/02/2023", "13/02/2023", "20/02/2023", "27/02/2023", "06/03/2023", "13/03/2023",
-        "20/03/2023", "27/03/2023", "03/04/2023", "10/04/2023", "17/04/2023", "24/04/2023",
-        "01/05/2023", "08/05/2023", "15/05/2023", "22/05/2023", "29/05/2023", "05/06/2023",
-        "12/06/2023", "19/06/2023", "26/06/2023", "03/07/2023", "10/07/2023", "17/07/2023",
-        "24/07/2023", "31/07/2023", "07/08/2023", "14/08/2023", "21/08/2023", "28/08/2023",
-        "04/09/2023", "11/09/2023", "18/09/2023", "25/09/2023", "02/10/2023", "09/10/2023",
-        "16/10/2023", "23/10/2023", "30/10/2023", "06/11/2023", "13/11/2023", "20/11/2023",
-        "27/11/2023", "04/12/2023", "11/12/2023", "18/12/2023", "25/12/2023"
-    ]
-    selected_week = st.selectbox('Select a week for YTD view', available_dates)
+    # Display charts on Streamlit
+    st.subheader(f"Leads Up To {selected_week}")
+    st.line_chart(leads_df.set_index('Week')[leads_df.columns[1]])
 
-    # Setting up the chatbot interface
-    user_input = st.text_input("Ask me about the data:")
-    if user_input:
-        response = chat_with_document(user_input, selected_week)
-        st.write(response)
+    st.subheader(f"Visits Up To {selected_week}")
+    st.line_chart(visits_df.set_index('Week')[visits_df.columns[2]])
 
-def chat_with_document(user_query, selected_week):
-    # Convert the selected week to its index for calculations
-    reverse_indexed_dates = {date: i for i, date in enumerate(available_dates)}
-    selected_week_index = reverse_indexed_dates[selected_week]
+    st.subheader(f"Actions Up To {selected_week}")
+    st.line_chart(actions_df.set_index('Week')[actions_df.columns[1]])
 
-    # Based on user_query, extract the required information from tables_dataframes
-    # and consider only rows up to selected_week_index
-
-    # ... (Your logic to process the user's query and extract information)
-
-    return "Response based on the user's query and selected date"
-
-st.title("Welcome To The CUPRA Co-Pilot")
-openai.api_key = st.secrets["openai"]["api_key"]
+st.title("Welcome To The Powerpoint Creator")
 
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 if uploaded_file is not None:
@@ -109,9 +93,5 @@ if uploaded_file is not None:
     available_dates = list(tables_dataframes["Overall Traffic Visits"]['Week'].dt.strftime('%d/%m/%Y'))
     selected_week = st.selectbox('Select a week for YTD view', available_dates)
 
-    user_input = st.text_input("Ask me about the data:")
-    if user_input:
-        response = chat_with_document(user_input, selected_week, tables_dataframes)
-        # Display the response
-        st.write(response)
-
+    # Display charts on Streamlit
+    display_charts_on_streamlit(tables_dataframes, selected_week)

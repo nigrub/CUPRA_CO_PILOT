@@ -89,62 +89,55 @@ def compute_means_for_type(tables, table_type, week_index):
     return means_df
 
 
+st.title('CSV Data Summary')
+uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
-def app():
-    st.title('CSV Data Summary')
-    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+if uploaded_file:
+    data = pd.read_csv(uploaded_file, header=None)
+    tables_dataframes = extract_tables(data)
 
-    if uploaded_file:
-        data = pd.read_csv(uploaded_file, header=None)
-        tables_dataframes = extract_tables(data)
+    if tables_dataframes:
+        selected_table = st.selectbox('Select a table to view', list(tables_dataframes.keys()))
 
-        if tables_dataframes:
-            selected_table = st.selectbox('Select a table to view', list(tables_dataframes.keys()))
+        available_dates = [
+            "26/12/2022", "02/01/2023", "09/01/2023", "16/01/2023", "23/01/2023", "30/01/2023",
+            "06/02/2023", "13/02/2023", "20/02/2023", "27/02/2023", "06/03/2023", "13/03/2023",
+            "20/03/2023", "27/03/2023", "03/04/2023", "10/04/2023", "17/04/2023", "24/04/2023",
+            "01/05/2023", "08/05/2023", "15/05/2023", "22/05/2023", "29/05/2023", "05/06/2023",
+            "12/06/2023", "19/06/2023", "26/06/2023", "03/07/2023", "10/07/2023", "17/07/2023",
+            "24/07/2023", "31/07/2023", "07/08/2023", "14/08/2023", "21/08/2023", "28/08/2023",
+            "04/09/2023", "11/09/2023", "18/09/2023", "25/09/2023", "02/10/2023", "09/10/2023",
+            "16/10/2023", "23/10/2023", "30/10/2023", "06/11/2023", "13/11/2023", "20/11/2023",
+            "27/11/2023", "04/12/2023", "11/12/2023", "18/12/2023", "25/12/2023"
+        ]
 
-            available_dates = [
-                "26/12/2022", "02/01/2023", "09/01/2023", "16/01/2023", "23/01/2023", "30/01/2023",
-                "06/02/2023", "13/02/2023", "20/02/2023", "27/02/2023", "06/03/2023", "13/03/2023",
-                "20/03/2023", "27/03/2023", "03/04/2023", "10/04/2023", "17/04/2023", "24/04/2023",
-                "01/05/2023", "08/05/2023", "15/05/2023", "22/05/2023", "29/05/2023", "05/06/2023",
-                "12/06/2023", "19/06/2023", "26/06/2023", "03/07/2023", "10/07/2023", "17/07/2023",
-                "24/07/2023", "31/07/2023", "07/08/2023", "14/08/2023", "21/08/2023", "28/08/2023",
-                "04/09/2023", "11/09/2023", "18/09/2023", "25/09/2023", "02/10/2023", "09/10/2023",
-                "16/10/2023", "23/10/2023", "30/10/2023", "06/11/2023", "13/11/2023", "20/11/2023",
-                "27/11/2023", "04/12/2023", "11/12/2023", "18/12/2023", "25/12/2023"
-            ]
+        # Indexed version of the available_dates
+        indexed_dates = {i: date for i, date in enumerate(available_dates)}
+        reverse_indexed_dates = {date: i for i, date in enumerate(available_dates)}
 
-            # Indexed version of the available_dates
-            indexed_dates = {i: date for i, date in enumerate(available_dates)}
-            reverse_indexed_dates = {date: i for i, date in enumerate(available_dates)}
+        # Use the available_dates directly in the dropdown for display
+        selected_week = st.selectbox('Select a week for YTD view', available_dates)
 
-            # Use the available_dates directly in the dropdown for display
-            selected_week = st.selectbox('Select a week for YTD view', available_dates)
+        # Convert the selected week to its index for calculations
+        selected_week_index = reverse_indexed_dates[selected_week]
 
-            # Convert the selected week to its index for calculations
-            selected_week_index = reverse_indexed_dates[selected_week]
+        filtered_df = tables_dataframes[selected_table].iloc[:selected_week_index + 1]
 
-            filtered_df = tables_dataframes[selected_table].iloc[:selected_week_index + 1]
+        # Format the 'Week' column for display
+        filtered_df['Week'] = filtered_df['Week'].dt.strftime('%d/%m/%Y')
 
-            # Format the 'Week' column for display
-            filtered_df['Week'] = filtered_df['Week'].dt.strftime('%d/%m/%Y')
+        st.table(filtered_df)
 
-            st.table(filtered_df)
+        if st.button("Show Summary Statistics"):
+            keyword = None
+            if "Visits" in selected_table:
+                keyword = "Visits"
+            elif "Leads" in selected_table:
+                keyword = "Leads"
+            elif "Actions" in selected_table:
+                keyword = "Actions"
 
-            if st.button("Show Summary Statistics"):
-                keyword = None
-                if "Visits" in selected_table:
-                    keyword = "Visits"
-                elif "Leads" in selected_table:
-                    keyword = "Leads"
-                elif "Actions" in selected_table:
-                    keyword = "Actions"
+            related_tables = get_related_tables(tables_dataframes, keyword)
+            means_df = compute_means_for_type(related_tables, keyword, selected_week_index)
 
-                related_tables = get_related_tables(tables_dataframes, keyword)
-                means_df = compute_means_for_type(related_tables, keyword, selected_week_index)
-
-                st.table(means_df)
-
-
-
-if __name__ == "__main__":
-    app()
+            st.table(means_df)
